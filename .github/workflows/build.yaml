@@ -1,0 +1,56 @@
+name: Build & Test
+
+on:
+  workflow_call:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: "Log level"
+        required: true
+        default: "warning"
+
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+    branches-ignore:
+      - main
+
+  push:
+    branches-ignore:
+      - main
+
+env:
+  STAGE: dev
+  REPOSITORY: node-handshake
+  RUST_BACKTRACE: 1
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    environment: dev
+    runs-on: ubuntu-latest
+    name: Build
+    steps:
+      # Checkout code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        run: |
+          rustup set profile minimal
+          rustup toolchain install 1.86 -c rust-docs
+          rustup default 1.86
+
+        # Cache dependencies to speed up build times
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./.cargo
+            ./target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Build and Test
+        run: |
+          cargo build --verbose
+          cargo test --verbose
