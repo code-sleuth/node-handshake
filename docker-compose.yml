@@ -1,0 +1,15 @@
+services:
+  node-handshake:
+    image: ibrahimmbaziira/node-handshake
+    restart: "always"
+    networks:
+      - node-service-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+
+networks:
+  node-service-network:
+    driver: bridge
