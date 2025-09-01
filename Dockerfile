@@ -20,5 +20,5 @@ RUN cargo build --release --bin p2p_solana_handshake
 
 FROM debian:buster-slim AS runtime
 WORKDIR /app
-COPY --from=builder /app/target/release/p2p_solana_handshake /usr/local/bin
+COPY --from=builder /app/target/release/p2p_solana_handshake /usr/local/bin/p2p_solana_handshake
 ENTRYPOINT ["/usr/local/bin/p2p_solana_handshake"]

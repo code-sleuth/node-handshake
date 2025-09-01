@@ -1,14 +1,181 @@
 services:
-  node-handshake:
-    image: ibrahimmbaziira/node-handshake
-    restart: "always"
+  # Solana test validator for local network
+  solana-test-validator:
+    image: tchambard/solana-test-validator:latest
+    container_name: solana-test-validator
+    ports:
+      - "8899:8899" # RPC port
+      - "8900:8900" # WebSocket port
     networks:
       - node-service-network
+    command: ["solana-test-validator"]
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "2"
+
+  # Gossip node server that listens for handshakes
+  gossip-server:
+    build: .
+    restart: "always"
+    command:
+      [
+        "--mode",
+        "server",
+        "--bind",
+        "0.0.0.0:8000",
+        "--network",
+        "localnet",
+        "--log-level",
+        "info",
+        "--log-format",
+        "pretty",
+      ]
+    ports:
+      - "8000:8000/udp"
+    networks:
+      - node-service-network
+    depends_on:
+      - solana-test-validator
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+    container_name: gossip-server
+
+  # Client 1 performs handshakes in continuous mode
+  client-1:
+    build: .
+    restart: "always"
+    command:
+      [
+        "--mode",
+        "client",
+        "--peers",
+        "gossip-server:8000",
+        "--network",
+        "localnet",
+        "--continuous",
+        "--interval",
+        "30",
+        "--log-level",
+        "info",
+        "--log-format",
+        "pretty",
+      ]
+    networks:
+      - node-service-network
+    depends_on:
+      - gossip-server
+      - solana-test-validator
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+    container_name: client-1
+
+  # Client 2 performs handshakes in continuous mode
+  client-2:
+    build: .
+    restart: "always"
+    command:
+      [
+        "--mode",
+        "client",
+        "--peers",
+        "gossip-server:8000",
+        "--network",
+        "localnet",
+        "--continuous",
+        "--interval",
+        "45",
+        "--log-level",
+        "info",
+        "--log-format",
+        "pretty",
+      ]
+    networks:
+      - node-service-network
+    depends_on:
+      - gossip-server
+      - solana-test-validator
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+    container_name: client-2
+
+  # Client 3 performs handshakes in continuous mode
+  client-3:
+    build: .
+    restart: "always"
+    command:
+      [
+        "--mode",
+        "client",
+        "--peers",
+        "gossip-server:8000",
+        "--network",
+        "localnet",
+        "--continuous",
+        "--interval",
+        "60",
+        "--log-level",
+        "info",
+        "--log-format",
+        "pretty",
+      ]
+    networks:
+      - node-service-network
+    depends_on:
+      - gossip-server
+      - solana-test-validator
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+    container_name: client-3
+
+  # Client 4 batch handshakes every 2 minutes
+  client-4:
+    build: .
+    restart: "always"
+    command:
+      [
+        "--mode",
+        "client",
+        "--peers",
+        "gossip-server:8000",
+        "--network",
+        "localnet",
+        "--continuous",
+        "--interval",
+        "120",
+        "--timeout",
+        "10",
+        "--max-retries",
+        "2",
+        "--log-level",
+        "debug",
+        "--log-format",
+        "pretty",
+      ]
+    networks:
+      - node-service-network
+    depends_on:
+      - gossip-server
+      - solana-test-validator
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+    container_name: client-4
 
 networks:
   node-service-network:
