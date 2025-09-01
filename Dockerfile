@@ -1,4 +1,4 @@
-FROM rust:1.87-alpine AS chef
+FROM rust:1.89-alpine AS chef
 USER root
 # Add cargo-chef to cache dependencies
 RUN apk add --no-cache musl-dev & cargo install cargo-chef
@@ -12,13 +12,13 @@ RUN cargo chef prepare --recipe-path recipe.json
 FROM chef AS builder
 COPY --from=planner /app/recipe.json recipe.json
 # Build dependencies - this is the caching Docker layer!
-RUN cargo chef cook --release --bin node-handshake --recipe-path recipe.json
+RUN cargo chef cook --release --bin p2p_solana_handshake --recipe-path recipe.json
 # Build application
 COPY . .
-RUN cargo build --release --bin node-handshake
+RUN cargo build --release --bin p2p_solana_handshake
 
 
 FROM debian:buster-slim AS runtime
 WORKDIR /app
-COPY --from=builder /app/target/release/node-handshake /usr/local/bin
-ENTRYPOINT ["/usr/local/bin/node-handshake"]
+COPY --from=builder /app/target/release/p2p_solana_handshake /usr/local/bin
+ENTRYPOINT ["/usr/local/bin/p2p_solana_handshake"]
