@@ -36,7 +36,7 @@ jobs:
         run: |
           rustup set profile minimal
           rustup toolchain install 1.86 -c rust-docs
-          rustup default 1.86
+          rustup default 1.89
 
         # Cache dependencies to speed up build times
       - name: Cache dependencies
