@@ -12,4 +12,5 @@ sleep 1
 
 docker compose up -d
 
-docker logs node-handshake-node-handshake-1 -f
+# watch gossip server logs
+docker-compose logs -f --tail=10 gossip-server
